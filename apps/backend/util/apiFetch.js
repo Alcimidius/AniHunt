@@ -124,8 +124,13 @@ async function fetchN(type, N) {
   return results.slice(0, N)
 }
 
-const anime = await fetchN("ANIME", 100);
-const manga = await fetchN("MANGA", 100);
+/*
+const anime = await fetchN("ANIME", 2);
+console.dir(anime);
 
-await fs.writeFile("anime.json", JSON.stringify(anime, null, 2));
-await fs.writeFile("manga.json", JSON.stringify(manga, null, 2));
+const manga = await fetchN("MANGA", 100); 
+
+ await fs.writeFile("anime.json", JSON.stringify(anime, null, 2));
+await fs.writeFile("manga.json", JSON.stringify(manga, null, 2)); */
+
+export { fetchN }
