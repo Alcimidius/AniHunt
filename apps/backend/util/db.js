@@ -1,7 +1,7 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import dotenv from "dotenv";
 import { fetchN } from './apiFetch.js';
-
+import { addEmbeddings } from './embedding.js';
 dotenv.config();
 
 const uri = process.env.DATABASE_URL;
@@ -37,8 +37,8 @@ async function insertMedia(mediaType,num) {
     const database = client.db("AniHunt");
     const collection = database.collection(mediaType);
     
-    const media = await fetchN("ANIME", num);
-    
+    let media = await fetchN("ANIME", num);
+    await addEmbeddings(media)
     const insertManyresult = await collection.insertMany(media);
     let ids = insertManyresult.insertedIds;
     console.log(`${insertManyresult.insertedCount} documents were inserted.`);
