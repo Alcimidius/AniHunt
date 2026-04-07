@@ -1,8 +1,7 @@
 import fs from "node:fs/promises"
-
 const ANILIST_URL = "https://graphql.anilist.co"
 const FOLLOWABLE_RELATIONS = new Set(["PREQUEL", "SEQUEL", "ADAPTATION", "PARENT", "SIDE_STORY"])
-const TAG_ACCURACY = 50;
+const TAG_ACCURACY = 70;
 const query = `
 query Query($page: Int, $perPage: Int, $isAdult: Boolean, $sort: [MediaSort], $asHtml: Boolean, $type: MediaType) {
   Page(page: $page, perPage: $perPage) {
@@ -69,7 +68,7 @@ function filterPage(data) {
   }
 }
 
-async function fetchPage(type,page) {
+async function fetchPage(type, page) {
 
   const variables = {
     "page": page,
@@ -96,7 +95,7 @@ async function fetchPage(type,page) {
     const retryAfter = (response.headers.get('Retry-After') ?? 60) * 1000
     console.warn(`Rate limited, waiting ${retryAfter / 1000}s...`)
     await new Promise(r => setTimeout(r, retryAfter))
-    return fetchPage(type,page)
+    return fetchPage(type, page)
   }
 
   const { data, errors } = await response.json()
@@ -112,7 +111,7 @@ async function fetchN(type, N) {
   let page = 1
 
   while (results.length < N) {
-    const { hasNextPage,media } = await fetchPage(type,page)
+    const { hasNextPage, media } = await fetchPage(type, page)
     results.push(...media)
     console.log(`${type} page ${page} — ${results.length} entries`);
 
@@ -124,13 +123,9 @@ async function fetchN(type, N) {
   return results.slice(0, N)
 }
 
-/*
-const anime = await fetchN("ANIME", 2);
-console.dir(anime);
+/* 
+const anime = await fetchN("ANIME", 10);
 
-const manga = await fetchN("MANGA", 100); 
-
- await fs.writeFile("anime.json", JSON.stringify(anime, null, 2));
-await fs.writeFile("manga.json", JSON.stringify(manga, null, 2)); */
+await fs.writeFile("anime.json", JSON.stringify(anime, null, 2)); */
 
 export { fetchN }
