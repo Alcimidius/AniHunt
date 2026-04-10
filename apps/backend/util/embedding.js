@@ -1,44 +1,52 @@
-import { Ollama } from 'ollama'
-import { fetchN } from './apiFetch.js';
 import sanitizeHtml from 'sanitize-html';
+import { Ollama } from 'ollama';
+import dotenv from "dotenv";
+dotenv.config();
 
-const ollama = new Ollama({ host: 'http://127.0.0.1:12434' })
-const media = await fetchN("ANIME", 10);
 
-//768 vector length
+const isLocal = process.env.LOCAL == 'true';
 
-async function addEmbeddings(data) {
+const ollama = isLocal
+    ? new Ollama({ host: process.env.OLLAMA_URL })
+    : null;
 
-    for (let item of data) {
+
+async function getEmbedding(input) {
+    try{
+        if (isLocal) {
+            const response = await ollama.embed({
+                model: 'nomic-embed-text:v1.5',
+                input
+            });
+            return response.embeddings[0];
+        } else {
+
+        }
+    }catch(err){
+        console.error(err);
+    }
+    
+}
+
+
+
+async function addSearchDocumentEmbeddings(data) {
+
+    await Promise.all(data.map(async (item) => {
         const sentence = `${item.genres} | ${item.tags} | ${sanitizeHtml(item.description, {
             allowedTags: [],
             allowedAttributes: {}
         }).replace(/[\"\r\n\t]/g, '')}`;
 
-        const response = await ollama.embed({
-            model: 'nomic-embed-text:v1.5',
-            input: `search_document: ${sentence}`,
-        })
+        item.embedding = await getEmbedding(`search_document: ${sentence}`);
+    }));
 
-        item.embedding = response.embeddings[0];
-
-        console.dir(item);
-    }
+    console.log("Document embeddings added");
 }
 
-export {addEmbeddings}
+async function getQueryEmbeddings(query) {
+    return await getEmbedding(`search_document: ${query}`);
+}
 
-/* import dotenv from "dotenv";
 
-
-dotenv.config();
-
-async function embed(sentences) {
-    const response = await fetch(process.env.MODAL_ENDPOINT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sentences })
-    })
-    const { embeddings } = await response.json()
-    return embeddings
-} */
+export { addSearchDocumentEmbeddings, getQueryEmbeddings };

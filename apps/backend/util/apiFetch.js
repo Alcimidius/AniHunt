@@ -1,6 +1,4 @@
-import fs from "node:fs/promises"
 const ANILIST_URL = "https://graphql.anilist.co"
-const FOLLOWABLE_RELATIONS = new Set(["PREQUEL", "SEQUEL", "ADAPTATION", "PARENT", "SIDE_STORY"])
 const TAG_ACCURACY = 70;
 const query = `
 query Query($page: Int, $perPage: Int, $isAdult: Boolean, $sort: [MediaSort], $asHtml: Boolean, $type: MediaType) {

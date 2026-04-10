@@ -5,8 +5,8 @@
         "apps/*"
     ],
     "scripts": {
-        "dev:backend": "npm run dev -w apps/backend",
-        "dev:frontend": "npm run dev -w apps/frontend",
+        "dev:backend": "node --watch --env-file=.env apps/backend/app.js",
+        "dev:frontend": "npm run dev apps/frontend",
         "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
         "lint": "eslint packages/"
     },

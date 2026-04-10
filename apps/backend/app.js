@@ -1,16 +1,12 @@
+import http from "http";
 
-import { createServer } from 'node:http';
-import dotenv from "dotenv";
-dotenv.config();
+const hostname = process.env.HOSTNAME;
+const port = process.env.PORT;
 
-
-const hostname = '127.0.0.1';
-const port = 3000;
-
-const server = createServer((req, res) => {
+const server = http.createServer((req, res) => {
     res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('Hello World!');
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ msg:"hello mk"}));
 });
 
 server.listen(port, hostname, () => {
