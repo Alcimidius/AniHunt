@@ -1,3 +1,5 @@
+import sanitizeHtml from 'sanitize-html';
+
 const ANILIST_URL = "https://graphql.anilist.co"
 const TAG_ACCURACY = 70;
 const query = `
@@ -42,17 +44,21 @@ query Query($page: Int, $perPage: Int, $isAdult: Boolean, $sort: [MediaSort], $a
 function transformMedia(item) {
   return {
     mediaId: item.id,
-    title: item.title,
+    title: item.title.english,
     type: item.type,
     format: item.format,
-    description: item.description,
-    startYear: item.startDate.year,
-    startMonth: item.startDate.month,
+    description: sanitizeHtml(item.description, {
+      allowedTags: [],
+      allowedAttributes: {}
+    }).replace(/\(Source:.*$/is, "")
+      .replace(/[\n\r]/g, ''),
+    startYear: item.startDate?.year,
+    startMonth: item.startDate?.month,
     episodes: item.episodes,
     chapters: item.chapters,
     status: item.status,
-    coverImage: item.coverImage.extraLarge,
-    genres: item.genres,
+    coverImage: item.coverImage?.extraLarge,
+    genres: item.genres ?? [],
     popularity: item.popularity,
     tags: item.tags
       .filter(tag => !tag.isAdult && !tag.isGeneralSpoiler && tag.rank >= TAG_ACCURACY)
@@ -117,13 +123,8 @@ async function fetchN(type, N) {
     page++
     await new Promise(r => setTimeout(r, 600)) // req/min limit
   }
-
   return results.slice(0, N)
 }
 
-/* 
-const anime = await fetchN("ANIME", 10);
-
-await fs.writeFile("anime.json", JSON.stringify(anime, null, 2)); */
 
 export { fetchN }
