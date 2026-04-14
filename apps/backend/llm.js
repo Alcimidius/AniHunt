@@ -1,45 +1,92 @@
-import Groq from "groq-sdk";
-import dotenv from "dotenv";
-dotenv.config();
+'use strict'
+import { GroqClient } from "./util/clients.js";
+import {recommend,rerank} from "./database.js"
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-});
+const tools = [
+    {
+        type: "function",
+        function: {
+            name: "get_recommendations",
+            description: "Search for anime recommendations based on themes, genres, moods, or similar titles. Call this whenever the user is asking for suggestions.",
+            parameters: {
+                type: "object",
+                properties: {
+                    query: {
+                        type: "string",
+                        description: "A semantic search query capturing the user's desired themes, genres, and mood. Rephrase the user input to be descriptive and rich."
+                    }
+                },
+                required: ["query"]
+            }
+        }
+    }
+];
 
-export async function rerank(query, candidates) {
-    const prompt = `
-You are a reranking system.
+const conversationHistory = [];
 
-Given a user query and a list of items, rank them by relevance.
-assign each item a relevance score from 0 to 100:
-- 100 = perfect match for the query
-- 0   = completely irrelevant
+async function getResponse(userMessage) {
+    conversationHistory.push({ role: "user", content: userMessage });
 
-Be discriminating — most items should NOT score 100. Spread scores based on actual relevance.
-
-Return ONLY valid JSON:
-[
-  { "title": title, "score": number }
-]
-
-Query:
-${query}
-
-Items:
-${JSON.stringify(candidates,0,2)}
-`;
-
-console.log(prompt);
-    const res = await groq.chat.completions.create({
+    const response = await GroqClient.chatCompletion({
         model: "openai/gpt-oss-120b",
+        provider: "groq",
         messages: [
-            { role: "system", content: "You are a precise ranking engine." },
-            { role: "user", content: prompt }
+            {
+                role: "system",
+                content: `You are a friendly anime recommendation assistant. 
+Chat naturally with the user. When they want anime or manga suggestions, 
+call the get_recommendations tool — do NOT answer with suggestions yourself.
+For anything else (greetings, etc.) just respond normally.`
+            },
+            ...conversationHistory
         ],
-        temperature: 0
+        tools,
+        tool_choice: "auto",
+        max_tokens: 500,
+        temperature: 0.7,
     });
 
-    console.log(res.choices[0].message.content);
-    
-    return JSON.parse(res.choices[0].message.content);
+    const message = response.choices[0].message;
+
+    // LLM wants to call the tool
+    if (message.tool_calls?.length > 0) {
+        const toolCall = message.tool_calls[0];
+        const { query } = JSON.parse(toolCall.function.arguments);
+
+        console.log(`Tool called with query: "${query}"`);
+
+        // Run your existing pipeline
+        const candidates = await recommend(query);
+        const results = await rerank(query, candidates, 5);
+
+        // Format results for the LLM to present nicely
+        const toolResult = results.map(({ doc }) => 
+            `- ${doc.title}: ${doc.description?.slice(0, 100)}...`
+        ).join("\n");
+
+        // Feed tool result back so LLM can respond naturally
+        conversationHistory.push({ role: "assistant", content: null, tool_calls: message.tool_calls });
+        conversationHistory.push({ role: "tool", tool_call_id: toolCall.id, content: toolResult });
+
+        const finalResponse = await GroqClient.chatCompletion({
+            model: "openai/gpt-oss-120b",
+            provider: "groq",
+            messages: [
+                { role: "system", content: "You are a friendly anime recommendation assistant. Present the results naturally and invite follow-up." },
+                ...conversationHistory
+            ],
+            max_tokens: 500,
+            temperature: 0.7,
+        });
+
+        const finalMessage = finalResponse.choices[0].message.content;
+        conversationHistory.push({ role: "assistant", content: finalMessage });
+        return finalMessage;
+    }
+
+    // Normal conversational reply
+    conversationHistory.push({ role: "assistant", content: message.content });
+    return message.content;
 }
+
+export { getResponse }

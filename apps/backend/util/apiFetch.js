@@ -1,3 +1,4 @@
+'use strict'
 import sanitizeHtml from 'sanitize-html';
 
 const ANILIST_URL = "https://graphql.anilist.co"
@@ -125,6 +126,5 @@ async function fetchN(type, N) {
   }
   return results.slice(0, N)
 }
-
 
 export { fetchN }
