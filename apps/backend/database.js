@@ -1,6 +1,5 @@
 'use strict'
 import { HFclient, vectorStore } from "./util/clients.js";
-import { getResponse } from "./llm.js";
 function buildDocString(media) {
     return `Genres: ${media.genres.join(", ")} Tags: ${media.tags.join(", ")} Description: ${media.description}`;
 }
@@ -16,7 +15,13 @@ async function recommend(query, topK = 50) {
         genres: doc.metadata.genres,
         tags: doc.metadata.tags,
         description: doc.metadata.description,
-        score: score,
+        coverImage: doc.metadata.coverImage,
+        format: doc.metadata.format,
+        startYear: doc.metadata.startYear,
+        startMonth: doc.metadata.startMonth,
+        episodes: doc.metadata.episodes,
+        status: doc.metadata.status,
+        //score: score,
     }));
 }
 
@@ -38,21 +43,19 @@ async function rerank(query, recommendations, topK = 3) {
     }));
 
     const sorted = scored.sort((a, b) => b.score - a.score);
-    return sorted.slice(0, topK);
+    return sorted.slice(0, topK).map((item) => item.doc);
 }
 
 
-try {
+/* try {
 
-    const query = "found family theme in a fantasy setting";
+    const query = "mature adult romance";
     const rec = await recommend(query);
     const final = await rerank(query, rec, 5)
 
-    console.dir(final);
 
-    console.dir(await getResponse(query));
 } catch (err) {
-    console.error(err);
-}
+    console.dir(err,{depth:null});
+} */
 
 export{recommend,rerank}

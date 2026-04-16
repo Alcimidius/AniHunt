@@ -1,6 +1,13 @@
 'use strict'
 import { GroqClient } from "./util/clients.js";
-import {recommend,rerank} from "./database.js"
+import { recommend, rerank } from "./database.js"
+
+const model = "openai/gpt-oss-120b";
+const provider = "groq";
+const max_tokens = 1000;
+const temperature = 0.7;
+const conversationHistory = [];
+
 
 const tools = [
     {
@@ -22,19 +29,71 @@ const tools = [
     }
 ];
 
-const conversationHistory = [];
 
+
+async function handleToolCall(message) {
+    const toolCall = message.tool_calls[0];
+
+    console.dir("message:\n");
+    console.dir(message, { depth: null, colors: true });
+
+    const { query } = JSON.parse(toolCall.function.arguments);
+
+    console.log(`Tool called with query: "${query}"`);
+
+    const candidates = await recommend(query);
+    const results = await rerank(query, candidates, 5);
+
+/*     console.dir("results:\n");
+    console.dir(results, { depth: null, colors: true }); */
+
+    const toolResult = JSON.stringify(
+        results.map((item) => ({
+            title: item.title,
+            description: item.description,
+        }))
+    );
+/*     console.dir(toolResult); */
+
+
+    conversationHistory.push({ role: "assistant", content: null, tool_calls: message.tool_calls });
+    conversationHistory.push({ role: "tool", tool_call_id: toolCall.id, content: toolResult });
+
+    const finalResponse = await GroqClient.chatCompletion({
+        model: model,
+        provider: provider,
+        messages: [
+            {
+                role: "system", content: `You are a friendly anime recommendation assistant. Present the results naturally.
+                                          Don't provide suggestions other than those provided by the tool call.
+                                          provide a very brief explanation on why each entry fits the user's query, use a bullet list structure.
+                                          The inferface will display the rest of the information.
+                                          Respond in normal text` },
+            ...conversationHistory
+        ],
+        max_tokens: max_tokens,
+        temperature: temperature,
+    });
+
+    const finalMessage = finalResponse.choices[0].message.content;
+
+    console.dir(finalMessage,{depth:null});
+    conversationHistory.push({ role: "assistant", content: finalMessage });
+    return { msg: finalMessage,
+        content: results
+     };
+}
 async function getResponse(userMessage) {
     conversationHistory.push({ role: "user", content: userMessage });
 
     const response = await GroqClient.chatCompletion({
-        model: "openai/gpt-oss-120b",
-        provider: "groq",
+        model: model,
+        provider: provider,
         messages: [
             {
                 role: "system",
                 content: `You are a friendly anime recommendation assistant. 
-Chat naturally with the user. When they want anime or manga suggestions, 
+Chat naturally with the user. When they want anime suggestions, 
 call the get_recommendations tool — do NOT answer with suggestions yourself.
 For anything else (greetings, etc.) just respond normally.`
             },
@@ -42,51 +101,20 @@ For anything else (greetings, etc.) just respond normally.`
         ],
         tools,
         tool_choice: "auto",
-        max_tokens: 500,
-        temperature: 0.7,
+        max_tokens: max_tokens,
+        temperature: temperature,
     });
 
     const message = response.choices[0].message;
 
-    // LLM wants to call the tool
+
     if (message.tool_calls?.length > 0) {
-        const toolCall = message.tool_calls[0];
-        const { query } = JSON.parse(toolCall.function.arguments);
-
-        console.log(`Tool called with query: "${query}"`);
-
-        // Run your existing pipeline
-        const candidates = await recommend(query);
-        const results = await rerank(query, candidates, 5);
-
-        // Format results for the LLM to present nicely
-        const toolResult = results.map(({ doc }) => 
-            `- ${doc.title}: ${doc.description?.slice(0, 100)}...`
-        ).join("\n");
-
-        // Feed tool result back so LLM can respond naturally
-        conversationHistory.push({ role: "assistant", content: null, tool_calls: message.tool_calls });
-        conversationHistory.push({ role: "tool", tool_call_id: toolCall.id, content: toolResult });
-
-        const finalResponse = await GroqClient.chatCompletion({
-            model: "openai/gpt-oss-120b",
-            provider: "groq",
-            messages: [
-                { role: "system", content: "You are a friendly anime recommendation assistant. Present the results naturally and invite follow-up." },
-                ...conversationHistory
-            ],
-            max_tokens: 500,
-            temperature: 0.7,
-        });
-
-        const finalMessage = finalResponse.choices[0].message.content;
-        conversationHistory.push({ role: "assistant", content: finalMessage });
-        return finalMessage;
+        return await handleToolCall(message);
     }
 
-    // Normal conversational reply
+
     conversationHistory.push({ role: "assistant", content: message.content });
-    return message.content;
+    return { msg: message.content };
 }
 
 export { getResponse }
