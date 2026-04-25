@@ -16,8 +16,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 
-
-
 app.post("/chat", async (req,res)=> {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     try{
@@ -37,5 +35,5 @@ app.get("/",(req,res,next) => {
 });
 
 
-app.listen(process.env.PORT, () => console.log("server on http://" + hostname +":"+ port));
+app.listen(port, hostname, () => console.log("server on http://" + hostname +":"+ port));
 
