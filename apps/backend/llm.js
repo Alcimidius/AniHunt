@@ -80,7 +80,7 @@ async function handleToolCall(message) {
     console.dir(finalMessage,{depth:null});
     conversationHistory.push({ role: "assistant", content: finalMessage });
     return { msg: finalMessage,
-        content: results
+        media: results
      };
 }
 async function getResponse(userMessage) {

@@ -26,20 +26,8 @@ app.post("/chat", async (req,res)=> {
     try{
         console.log(req.body);
          const query = req.body.msg;
-        // const response = await getResponse(query);
-        const simpleMessage = {
-            msg: "message"
-        };
-        const mediaMessage = {
-            msg: "message",
-            media: [
-            {
-                id:1,
-                name: "mediaName",
-            }
-            ]
-        };
-        res.json(mediaMessage);
+        const response = await getResponse(query);
+        res.json(response);
     }catch(err){
         console.log(err)
     }

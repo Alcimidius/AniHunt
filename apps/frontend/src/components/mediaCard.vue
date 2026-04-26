@@ -10,29 +10,28 @@ import type { Media } from 'shared/Media';
 
 
 <template>
-        <div class="card bg-base-100 image-full w-96 shadow-sm">
+        <div class="card bg-base-100 w-full max-w-md  overflow-hidden ">
 
             <figure>
                 <img :src="media.coverImage" />
             </figure>
 
-            <div class="card-body ">
-                <h2 class="card-title text-base line-clamp-2">
+            <div class="card-body flex flex-col gap-1">
+                <h2 class="card-title text-base ">
                     {{ media.title }}
                 </h2>
 
-                <p class="text-xs opacity-70">
+                <p class="text-xs">
                     {{ media.format }} {{ media.startYear }}/{{ media.startMonth }} • {{ media.status }}
                 </p>
 
-                <p class="text-xs opacity-70">
+                <p class="text-xs">
                     Episodes: {{ media.episodes ?? 'N/A' }}
                 </p>
 
-                <p class="text-xs opacity-70 line-clamp-3">
+                <p class="text-md">
                     {{ media.description }}
                 </p>
-
 
                 <div class="flex flex-wrap gap-1 mt-2">
                     <span v-for="genre in media.genres" :key="genre" class="badge badge-md badge-primary badge-outline">
