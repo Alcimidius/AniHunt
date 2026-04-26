@@ -21,6 +21,7 @@
     "balanced-match": "^4.0.4",
     "boolbase": "^1.0.0",
     "brace-expansion": "^5.0.5",
+    "cors": "^2.8.6",
     "cross-spawn": "^7.0.6",
     "cssesc": "^3.0.0",
     "csv-parse": "^6.2.1",
@@ -73,6 +74,7 @@
     "punycode": "^2.3.1",
     "sanitize-html": "^2.17.2",
     "semver": "^7.7.4",
+    "shared": "*",
     "shebang-command": "^2.0.0",
     "shebang-regex": "^3.0.0",
     "type-check": "^0.4.0",
@@ -82,9 +84,7 @@
     "which": "^2.0.2",
     "word-wrap": "^1.2.5",
     "xml-name-validator": "^4.0.0",
-    "yocto-queue": "^0.1.0",
-    "shared": "*"
-    
+    "yocto-queue": "^0.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

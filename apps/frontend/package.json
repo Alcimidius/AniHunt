@@ -13,9 +13,9 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.2.4",
+    "@tailwindcss/vite": "^4.2.2",
     "shared": "*",
-    "tailwindcss": "^4.2.4",
+    "tailwindcss": "^4.2.2",
     "vue": "^3.5.31",
     "vue-router": "^5.0.4"
   },

@@ -2,6 +2,8 @@
 import express from "express";
 import { logger } from "./middleware/logger.js";
 import { getResponse } from "./llm.js";
+import cors from "cors";
+
 
 
 const port = process.env.PORT;
@@ -10,6 +12,9 @@ const app = express();
 
 
 
+app.use(cors({
+    origin: process.env.CLIENT_HOSTNAME
+}));
 
 app.use(logger);
 app.use(express.json());
@@ -19,10 +24,22 @@ app.use(express.urlencoded({ extended: false }));
 app.post("/chat", async (req,res)=> {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     try{
-        const query = req.body.msg;
-        const response = await getResponse(query);
-
-        res.json(response);
+        console.log(req.body);
+         const query = req.body.msg;
+        // const response = await getResponse(query);
+        const simpleMessage = {
+            msg: "message"
+        };
+        const mediaMessage = {
+            msg: "message",
+            media: [
+            {
+                id:1,
+                name: "mediaName",
+            }
+            ]
+        };
+        res.json(mediaMessage);
     }catch(err){
         console.log(err)
     }

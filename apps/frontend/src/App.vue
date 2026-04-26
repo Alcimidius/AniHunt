@@ -2,6 +2,6 @@
 import ChatView from './views/ChatView.vue';
 </script>
 
-<template>
-  <ChatView></ChatView>
+<template >
+      <ChatView></ChatView>
 </template>
