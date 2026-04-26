@@ -56,7 +56,6 @@ function transformMedia(item) {
     startYear: item.startDate?.year,
     startMonth: item.startDate?.month,
     episodes: item.episodes,
-    chapters: item.chapters,
     status: item.status,
     coverImage: item.coverImage?.extraLarge,
     genres: item.genres ?? [],

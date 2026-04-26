@@ -3,6 +3,8 @@ import { ConversationItem } from '@/types/chat';
 import { ref } from 'vue';
 
 import chatbubble from '@/components/chatbubble.vue';
+import { Media } from 'shared/Media';
+import MediaCard from '@/components/mediaCard.vue';
 
 const url = "http://127.0.0.1:10000/chat"
 let ConversationHistory = ref<ConversationItem[]>([]);
@@ -15,12 +17,36 @@ let temp: ConversationItem = {
         msg:"1"
     }
 }
+
+let media = ref< Media >({
+    mediaId: 123,
+    title: "mediaTitle",
+    type: "anime",
+    format: "TV",
+    description: "loremosdisaoisdaoidjsajid",
+    startYear: 2020,
+    startMonth: 1,
+    episodes: 123,
+    status: "FINISHED",
+    coverImage: "https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp",
+    genres: ["action", "3", "321"],
+    tags: ["32131", "321", "34145678"],
+})
 ConversationHistory.value.push(temp);
  temp = {
     userType: "System",
     content: {
-         msg: "2"
+         msg: "2",
+         media: [media.value,media.value]
      }
+}
+ConversationHistory.value.push(temp);
+temp = {
+    userType: "System",
+    content: {
+        msg: "2",
+        media: [media.value, media.value]
+    }
 }
 ConversationHistory.value.push(temp);
 
