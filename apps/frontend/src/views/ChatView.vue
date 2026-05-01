@@ -44,7 +44,17 @@ async function handleSubmit() {
             method:"POST",
             body: JSON.stringify({ msg: query.value}),
         })
-        const body = await res.json()
+
+
+        const body = await res.json();
+
+        if (!res.ok) {
+
+            throw new Error(
+                `HTTP ${res.status} ${res.statusText}: ${body.msg}`
+            );
+        }
+
 
         const temp: ConversationItem = {
             userType: "System",
