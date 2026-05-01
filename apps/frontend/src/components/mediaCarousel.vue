@@ -9,18 +9,20 @@ const uid = Math.random().toString(36).slice(2);
 </script>
 
 <template>
-    <div class="carousel rounded-box w-full">
+    <div class="w-80 relative"> 
 
-        <div v-for="(media, index) in mediaList" :key="`${uid}-${index}`" :id="`slide-${uid}-${index}`"
-            class="carousel-item w-full flex justify-center">
-            <MediaCard :media="media" />
+        <div class="carousel w-full rounded-box">
+
+            <div v-for="(media, index) in mediaList" :key="`${uid}-${index}`" :id="`slide-${uid}-${index}`"
+                class="carousel-item relative w-full justify-center">
+                <MediaCard :media="media" />
+            </div>
+
         </div>
-    </div>
-
-    <div class="flex w-full justify-center gap-2 py-2">
-        <a v-for="(media, index) in mediaList" :key="`${uid}-${index}`" class="btn btn-xs"
-            :href="`#slide-${uid}-${index}`">
-            {{ index }}
-        </a>
+        <div class="mt-2 flex justify-center gap-1">
+            <a v-for="(_, i) in mediaList" :key="i" :href="`#slide-${uid}-${i}`" class="btn btn-xs">
+                {{ i + 1 }}
+            </a>
+        </div>
     </div>
 </template>
