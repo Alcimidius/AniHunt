@@ -18,13 +18,10 @@ let ConversationHistory = ref<ConversationItem[]>([]);
 let query= ref("");
 let loading = ref<boolean>(false);
 
-const bottomRef = ref<HTMLElement | null>(null);
-
-async function scrollToBottom() {
-    await nextTick();
-    bottomRef.value?.scrollIntoView({ behavior: 'smooth' });
-}
 async function handleSubmit() {
+    if(!query.value) return;
+    if(query.value.trim().length === 0) return;
+
     const temp: ConversationItem = {
         userType: "User",
         content: {
@@ -34,7 +31,6 @@ async function handleSubmit() {
     ConversationHistory.value.push(temp);
     ConversationHistory.value.push(loadingContersationItem);
     loading.value = true;
-    await scrollToBottom();
 
     try{
         const res = await fetch(url,{
@@ -67,13 +63,13 @@ async function handleSubmit() {
         ConversationHistory.value.pop();
         ConversationHistory.value.push(temp);
         loading.value = false;
-
-        await scrollToBottom();
+        
     }catch(err){
         alert(err);
         ConversationHistory.value.pop();
         loading.value = false;
     }
+    query.value = "";
 }
 </script>
 
@@ -85,7 +81,6 @@ async function handleSubmit() {
                 <chatbubble :item="message" />
             </div>
 
-            <div ref="bottomRef"></div>
         </div>
 
 

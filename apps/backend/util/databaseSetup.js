@@ -2,8 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { Document } from "@langchain/core/documents";
-import { fetchN } from './apiFetch.js';
-import { vectorStore } from "./clients.js";
+import { fetchN } from './apiFetch.ts';
+import { vectorStore } from "./clients.ts";
 
 function buildDocString(media) {
     return `Genres: ${media.genres.join(", ")} Tags: ${media.tags.join(", ")} Description: ${media.description}`;

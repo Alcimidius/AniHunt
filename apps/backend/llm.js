@@ -1,10 +1,10 @@
 'use strict'
-import { GroqClient } from "./util/clients.js";
-import { recommend, rerank } from "./database.js"
+import { GroqClient } from "./util/clients.ts";
+import { recommend, rerank } from "./database.ts"
 
 const model = "openai/gpt-oss-120b";
 const provider = "groq";
-const max_tokens = 1000;
+const max_tokens = 4000;
 const temperature = 0.7;
 const conversationHistory = [];
 
@@ -34,17 +34,25 @@ const tools = [
 async function handleToolCall(message) {
     const toolCall = message.tool_calls[0];
 
-    console.dir("message:\n");
-    console.dir(message, { depth: null, colors: true });
+    /* console.dir("\n\n\nmessage:\n");
+    console.dir(message, { depth: null, colors: true }); */
 
     const { query } = JSON.parse(toolCall.function.arguments);
 
     console.log(`Tool called with query: "${query}"`);
 
-    const candidates = await recommend(query);
-    const results = await rerank(query, candidates, 5);
+    const candidates = await recommend(query,20);
 
-/*     console.dir("results:\n");
+/*     console.dir("\n\n\n\rrecommend results:\n");
+    console.dir(candidates, { depth: null, colors: true }); */
+
+    if(candidates.length === 0){
+        throw new Error("database fetch Empty");
+    }
+
+    const results = await rerank(query, candidates,5);
+
+/*     console.dir("\n\n\n\nrerank results:\n");
     console.dir(results, { depth: null, colors: true }); */
 
     const toolResult = JSON.stringify(
@@ -53,7 +61,10 @@ async function handleToolCall(message) {
             description: item.description,
         }))
     );
-/*     console.dir(toolResult); */
+    
+    
+/*     console.dir("\n\n\n\n toolResult:\n");
+    console.dir(toolResult, { depth: null, colors: true }); */
 
 
     conversationHistory.push({ role: "assistant", content: null, tool_calls: message.tool_calls });
@@ -77,7 +88,7 @@ async function handleToolCall(message) {
 
     const finalMessage = finalResponse.choices[0].message.content;
 
-    console.dir(finalMessage,{depth:null});
+    /* console.dir(finalMessage,{depth:null}); */
     conversationHistory.push({ role: "assistant", content: finalMessage });
     return { msg: finalMessage,
         media: results
@@ -86,35 +97,43 @@ async function handleToolCall(message) {
 async function getResponse(userMessage) {
     conversationHistory.push({ role: "user", content: userMessage });
 
-    const response = await GroqClient.chatCompletion({
-        model: model,
-        provider: provider,
-        messages: [
-            {
-                role: "system",
-                content: `You are a friendly anime recommendation assistant. 
+    try{
+
+        const response = await GroqClient.chatCompletion({
+            model: model,
+            provider: provider,
+            messages: [
+                {
+                    role: "system",
+                    content: `You are a friendly anime recommendation assistant. 
 Chat naturally with the user. When they want anime suggestions, 
 call the get_recommendations tool — do NOT answer with suggestions yourself.
 For anything else (greetings, etc.) just respond normally.`
-            },
-            ...conversationHistory
-        ],
-        tools,
-        tool_choice: "auto",
-        max_tokens: max_tokens,
-        temperature: temperature,
-    });
+                },
+                ...conversationHistory
+            ],
+            tools,
+            tool_choice: "auto",
+            max_tokens: max_tokens,
+            temperature: temperature,
+        });
 
-    const message = response.choices[0].message;
+        const message = response.choices[0].message;
 
 
-    if (message.tool_calls?.length > 0) {
-        return await handleToolCall(message);
+        if (message.tool_calls?.length > 0) {
+            return await handleToolCall(message);
+        }
+
+
+        conversationHistory.push({ role: "assistant", content: message.content });
+        return { msg: message.content };
+    }catch(err){
+
+        conversationHistory.pop();
+
     }
-
-
-    conversationHistory.push({ role: "assistant", content: message.content });
-    return { msg: message.content };
+    
 }
 
 export { getResponse }

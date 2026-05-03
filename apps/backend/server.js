@@ -25,11 +25,17 @@ app.post("/chat", async (req,res)=> {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     try{
         console.log(req.body);
-         const query = req.body.msg;
+        const query = req.body.msg;
         const response = await getResponse(query);
+        res.status(200);
         res.json(response);
     }catch(err){
         console.log(err)
+
+        res.status(500);
+        res.json({
+            msg: "response error"
+        });
     }
      
 });

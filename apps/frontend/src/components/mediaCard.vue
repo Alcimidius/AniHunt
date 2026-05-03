@@ -10,13 +10,13 @@ import type { Media } from 'shared/Media';
 
 
 <template>
-        <div class="card bg-base-100 w-full max-w-md   overflow-hidden">
+        <div class="card bg-base-100 w-full max-w-md">
 
             <figure>
                 <img :src="media.coverImage" />
             </figure>
 
-            <div class="card-body flex flex-col gap-1 min-h-0">
+            <div class="card-body flex flex-col gap-1">
                 <h2 class="card-title text-base ">
                     {{ media.title }}
                 </h2>
@@ -29,12 +29,12 @@ import type { Media } from 'shared/Media';
                     Episodes: {{ media.episodes ?? 'N/A' }}
                 </p>
 
-                <p class= "text-sm leading-relaxed overflow-y-auto pr-2">
+                <p class= "text-sm leading-relaxed">
                     {{ media.description }}
                 </p>
 
                 <div class="flex flex-wrap gap-1 mt-2">
-                    <span v-for="genre in media.genres" :key="genre" class="badge badge-md badge-primary badge-outline">
+                    <span v-for="genre in media.genres " :key="genre" class="badge badge-md badge-primary badge-outline">
                         {{ genre }}
                     </span>
                 </div>

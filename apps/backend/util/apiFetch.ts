@@ -1,6 +1,7 @@
 'use strict'
 import sanitizeHtml from 'sanitize-html';
-
+import type {Media} from "shared/Media";
+import type { MediaApi, FilteredPage } from './apiFetchType';
 const ANILIST_URL = "https://graphql.anilist.co"
 const TAG_ACCURACY = 70;
 const query = `
@@ -42,37 +43,37 @@ query Query($page: Int, $perPage: Int, $isAdult: Boolean, $sort: [MediaSort], $a
 }
 `
 
-function transformMedia(item) {
+function transformMedia(item: MediaApi) :Media{
   return {
-    mediaId: item.id,
-    title: item.title.english,
-    type: item.type,
-    format: item.format,
-    description: sanitizeHtml(item.description, {
+    mediaId: item.mediaId,
+    title: item.title?.english ?? "",
+    type: item.type ?? "",
+    format: item.format ?? "",
+    description: sanitizeHtml(item.description ?? "", {
       allowedTags: [],
       allowedAttributes: {}
     }).replace(/\(Source:.*$/is, "")
       .replace(/[\n\r]/g, ''),
-    startYear: item.startDate?.year,
-    startMonth: item.startDate?.month,
-    episodes: item.episodes,
-    status: item.status,
-    coverImage: item.coverImage?.extraLarge,
+    startYear: item.startDate?.year ?? 0,
+    startMonth: item.startDate?.month ?? 0,
+    episodes: item.episodes ?? 0,
+    status: item.status ?? "",
+    coverImage: item.coverImage?.extraLarge ?? "",
     genres: item.genres ?? [],
-    popularity: item.popularity,
     tags: item.tags
-      .filter(tag => !tag.isAdult && !tag.isGeneralSpoiler && tag.rank >= TAG_ACCURACY)
-      .map(tag => tag.name),
+      ?.filter(tag => !tag.isAdult && !tag.isGeneralSpoiler && tag.rank >= TAG_ACCURACY)
+      .map(tag => tag.name) ?? [],
   }
 }
-function filterPage(data) {
+
+function filterPage(data: any): FilteredPage  {
   return {
     hasNextPage: data.Page.pageInfo.hasNextPage,
     media: data.Page.media.map(transformMedia),
   }
 }
 
-async function fetchPage(type, page) {
+async function fetchPage(type: string, page : number) {
 
   const variables = {
     "page": page,
@@ -96,10 +97,10 @@ async function fetchPage(type, page) {
   })
 
   if (response.status === 429) {
-    const retryAfter = (response.headers.get('Retry-After') ?? 60) * 1000
-    console.warn(`Rate limited, waiting ${retryAfter / 1000}s...`)
-    await new Promise(r => setTimeout(r, retryAfter))
-    return fetchPage(type, page)
+    const retryAfter = (parseInt(response.headers.get('Retry-After') ?? '1') || 60) * 1000;
+    console.warn(`Rate limited, waiting ${retryAfter / 1000}s...`);
+    await new Promise(r => setTimeout(r, retryAfter));
+    return fetchPage(type, page);
   }
 
   const { data, errors } = await response.json()
@@ -110,7 +111,7 @@ async function fetchPage(type, page) {
 }
 
 
-async function fetchN(type, N) {
+async function fetchN(type : string, N: number) {
   const results = []
   let page = 1
 
